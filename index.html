@@ -85,7 +85,7 @@
       </nav>
       <!-- Footer -->
       <div class="hidden md:block mt-auto pt-6 border-t border-gray-700 text-xs text-gray-400 text-center">
-        <span>©️ 2025 Cleysson Dias</span>
+        <span>© 2025 Cleysson Dias</span>
       </div>
     </aside>
 
@@ -355,7 +355,7 @@
       lucide.createIcons();
 
       // URL da API backend
-      const API_URL = "https://apilechef-production.up.railway.app/app"
+      const API_URL = "http://localhost:3001/api";
 
       // Autenticação: redireciona para login se não houver token
       (function() {
@@ -1382,4 +1382,6 @@
 
         doc.save(`movimentacoes_${formatarDataBR(new Date()).replace(/\//g, '-')}.pdf`);
       }
-    </script
+    </script>
+  </body>
+</html>
