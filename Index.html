@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Le Chef - Controle de Estoque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1f2937',
+              secondary: '#2d3748',
+              accent: '#f97316',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  </head>
+  <body class="flex flex-col md:flex-row bg-primary text-white font-sans min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-full md:w-64 bg-secondary flex flex-row md:flex-col px-2 md:px-4 py-4 md:py-6 space-y-0 md:space-y-8 shadow-lg transition-all duration-300 min-h-[60px] md:min-h-screen relative z-20">
+      <!-- Logo/Header -->
+      <div class="flex items-center space-x-3 mb-4 md:mb-6 px-2 w-full">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/chef-hat.png" alt="Le Chef Logo" class="h-10 w-10" />
+        <span id="t" class="text-3xl font-bold text-accent hidden sm:inline">Le Chef</span>
+        <button onclick="toggleMenu()" class="ml-auto text-white hover:text-accent transition md:hidden">
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </div>
+      <!-- Usuário logado -->
+      <div id="usuario-logado" class="flex items-center gap-2 px-2 mb-2 text-sm text-gray-300 transition-all w-full">
+        <i data-lucide="user" class="w-4 h-4 text-accent"></i>
+        <span id="usuario-logado-email" class="sidebar-email hidden sm:inline"> </span>
+      </div>
+      <!-- Navigation -->
+      <nav class="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-2 w-full overflow-x-auto md:overflow-visible">
+        <button onclick="mostrarSecao('dashboard')" id="nav-dashboard" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
+          <i data-lucide="layout-dashboard" class="group-hover:text-accent"></i>
+          <span id="t1" class="transition">Dashboard</span>
+        </button>
+        <button onclick="mostrarSecao('cadastro')" id="nav-cadastro" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
+          <i data-lucide="plus-circle" class="group-hover:text-accent"></i>
+          <span id="t2" class="transition">Novo Produto</span>
+        </button>
+        <button onclick="mostrarSecao('lista')" id="nav-lista" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
+          <i data-lucide="list" class="group-hover:text-accent"></i>
+          <span id="t3" class="transition">Lista de Produtos</span>
+        </button>
+        <button onclick="mostrarSecao('saida')" id="nav-saida" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-red-500/20 hover:text-red-400 transition group">
+          <i data-lucide="arrow-down-circle" class="group-hover:text-red-400"></i>
+          <span class="transition">Saídas</span>
+        </button>
+        <button onclick="mostrarSecao('entrada')" id="nav-entrada" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-green-500/20 hover:text-green-400 transition group">
+          <i data-lucide="arrow-up-circle" class="group-hover:text-green-400"></i>
+          <span class="transition">Entradas</span>
+        </button>
+        <button onclick="mostrarSecao('movimentacoes')" id="nav-movimentacoes" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-blue-500/20 hover:text-blue-400 transition group">
+          <i data-lucide="shuffle" class="group-hover:text-blue-400"></i>
+          <span class="transition">Movimentações</span>
+        </button>
+        <hr class="my-3 border-gray-600" />
+        <button onclick="exportarCSV()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
+          <i data-lucide="download" class="group-hover:text-accent"></i>
+          <span id="t4" class="transition">Exportar CSV</span>
+        </button>
+        <button onclick="gerarPDF()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
+          <i data-lucide="file-text" class="group-hover:text-accent"></i>
+          <span id="t5" class="transition">Gerar PDF</span>
+        </button>
+        <button onclick="logout()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-red-600 hover:text-white transition group mt-2">
+          <i data-lucide="log-out" class="group-hover:text-white"></i>
+          <span class="class="transition">Sair</span>
+        </button>
+      </nav>
+      <!-- Footer -->
+      <div class="hidden md:block mt-auto pt-6 border-t border-gray-700 text-xs text-gray-400 text-center">
+        <span>©️ 2025 Cleysson Dias</span>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1 p-2 md:p-8 space-y-8 md:space-y-12 w-full">
+      <!-- Dashboard -->
+      <section id="dashboard" class="space-y-6 md:space-y-8">
+        <h2 class="text-2xl md:text-3xl font-semibold">Dashboard</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+          <div class="bg-secondary p-4 md:p-6 rounded-xl shadow flex flex-col items-start">
+            <span class="text-sm text-gray-300">Total de Produtos</span>
+            <span class="text-2xl font-bold" id="total-produtos">0</span>
+          </div>
+          <div class="bg-secondary p-4 md:p-6 rounded-xl shadow flex flex-col items-start">
+            <span class="text-sm text-gray-300">Categorias</span>
+            <span class="text-2xl font-bold" id="total-categorias">0</span>
+          </div>
+          <div class="bg-secondary p-4 md:p-6 rounded-xl shadow flex flex-col items-start">
+            <span class="text-sm text-gray-300">Produtos com validade</span>
+            <span class="text-2xl font-bold" id="total-validade">0</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl p-2 md:p-6 text-gray-900 shadow bg-gray-200 overflow-x-auto">
+          <h3 class="text-lg md:text-xl font-semibold mb-2 md:mb-4">Resumo de Produtos</h3>
+          <canvas id="graficoProdutos" class="w-full min-w-[320px] h-48 md:h-64"></canvas>
+        </div>
+        <!-- Gráfico de movimentações no dashboard -->
+        <div class="bg-white rounded-xl p-2 md:p-6 text-gray-900 shadow bg-gray-200 overflow-x-auto">
+          <h3 class="text-lg md:text-xl font-semibold mb-2 md:mb-4">Entradas x Saídas (Últimos 7 dias)</h3>
+          <canvas id="graficoMovimentacoesDashboard" class="w-full min-w-[320px] h-48 md:h-64"></canvas>
+        </div>
+      </section>
+
+      <!-- Cadastro -->
+      <section id="cadastro" class="hidden bg-secondary text-white p-2 md:p-6 rounded-2xl shadow-md">
+        <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="text-accent"></i>
+          Cadastrar Novo Produto
+        </h2>
+        <form id="form-produto" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex flex-col gap-2">
+            <label for="nome" class="text-sm text-gray-300 font-semibold">Nome do produto *</label>
+            <input type="text" id="nome" placeholder="Ex: Arroz Integral" name="nome" required class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="quantidade" class="text-sm text-gray-300 font-semibold">Quantidade *</label>
+            <input type="number" id="quantidade" placeholder="Ex: 10" name="quantidade" min="0" required class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="minimo" class="text-sm text-gray-300 font-semibold">Quantidade mínima *</label>
+            <input type="number" id="minimo" placeholder="Ex: 2" name="minimo" min="0" required class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="categoria" class="text-sm text-gray-300 font-semibold">Categoria</label>
+            <input type="text" id="categoria" placeholder="Ex: Grãos" name="categoria" class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="fornecedor" class="text-sm text-gray-300 font-semibold">Fornecedor</label>
+            <input type="text" id="fornecedor" placeholder="Ex: Mercado X" name="fornecedor" class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="validade" class="text-sm text-gray-300 font-semibold">Validade</label>
+            <input type="date" id="validade" name="validade" class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent" />
+          </div>
+          <div class="flex flex-col gap-2 md:col-span-2">
+            <label for="observacoes" class="text-sm text-gray-300 font-semibold">Observações</label>
+            <textarea id="observacoes" placeholder="Ex: Produto orgânico, armazenar em local seco." name="observacoes" rows="3" class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400"></textarea>
+          </div>
+          <div class="flex flex-col gap-2 md:col-span-2">
+            <label for="foto" class="text-sm text-gray-300 font-semibold">Foto do produto</label>
+            <input type="file" id="foto" name="foto" accept="image/*" class="p-4 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-orange-600 transition" />
+            <div id="preview-foto" class="mt-2"></div>
+          </div>
+          <button type="submit" class="md:col-span-2 bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center">
+            <i data-lucide="save"></i> Salvar Produto
+          </button>
+        </form>
+      </section>
+
+      <!-- Lista -->
+      <section id="lista" class="hidden bg-white text-gray-800 p-2 md:p-6 rounded-2xl shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4 mb-4">
+          <h2 class="text-2xl font-semibold flex items-center gap-2">
+            <i data-lucide="list" class="text-accent"></i>
+            Estoque Atual
+          </h2>
+          <div class="flex gap-2">
+            <input id="filtro-lista" type="text" placeholder="Buscar produto, categoria ou fornecedor..." class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent text-gray-800 bg-gray-100 w-64" />
+            <button onclick="renderTabela()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1">
+              <i data-lucide="refresh-ccw"></i> Atualizar
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto rounded-lg shadow-inner">
+          <table class="w-full text-left border-collapse min-w-[600px] md:min-w-[900px]">
+            <thead>
+              <tr class="bg-gray-200 text-gray-700">
+                <th class="p-3 font-semibold">#</th>
+                <th class="p-3 font-semibold">Produto</th>
+                <th class="p-3 font-semibold">Quantidade</th>
+                <th class="p-3 font-semibold">Mín.</th>
+                <th class="p-3 font-semibold">Categoria</th>
+                <th class="p-3 font-semibold">Fornecedor</th>
+                <th class="p-3 font-semibold">Validade</th>
+                <th class="p-3 font-semibold">Observações</th>
+                <th class="p-3 font-semibold">Foto</th>
+                <th class="p-3 font-semibold">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-estoque" class="divide-y divide-gray-200">
+              <!-- Linhas via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Saída de Produtos -->
+      <section id="saida" class="hidden bg-white text-gray-800 p-2 md:p-6 rounded-2xl shadow-md">
+        <h2 class="text-2xl font-semibold flex items-center gap-2 mb-4">
+          <i data-lucide="arrow-down-circle" class="text-red-400"></i>
+          Saída de Produto
+        </h2>
+        <form id="form-saida" class="flex flex-col md:flex-row gap-4 items-end">
+          <div class="flex flex-col flex-1">
+            <label for="saida-produto" class="text-sm font-semibold text-gray-700 mb-1">Produto</label>
+            <select id="saida-produto" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
+              <!-- Opções via JS -->
+            </select>
+          </div>
+          <div class="flex flex-col w-32">
+            <label for="saida-quantidade" class="text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
+            <input type="number" id="saida-quantidade" min="1" value="1" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" />
+          </div>
+          <div class="flex flex-col w-48">
+            <label for="saida-data" class="text-sm font-semibold text-gray-700 mb-1">Data da Saída</label>
+            <input type="date" id="saida-data" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" value="" />
+          </div>
+          <button type="submit" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition font-semibold flex items-center gap-2">
+            <i data-lucide="minus-circle"></i> Registrar Saída
+          </button>
+        </form>
+        <div id="saida-msg" class="mt-4 text-sm"></div>
+      </section>
+
+      <!-- Entrada de Produtos -->
+      <section id="entrada" class="hidden bg-white text-gray-800 p-2 md:p-6 rounded-2xl shadow-md">
+        <h2 class="text-2xl font-semibold flex items-center gap-2 mb-4">
+          <i data-lucide="arrow-up-circle" class="text-green-400"></i>
+          Entrada de Produto
+        </h2>
+        <form id="form-entrada" class="flex flex-col md:flex-row gap-4 items-end">
+          <div class="flex flex-col flex-1">
+            <label for="entrada-produto" class="text-sm font-semibold text-gray-700 mb-1">Produto</label>
+            <select id="entrada-produto" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400">
+              <!-- Opções via JS -->
+            </select>
+          </div>
+          <div class="flex flex-col w-32">
+            <label for="entrada-quantidade" class="text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
+            <input type="number" id="entrada-quantidade" min="1" value="1" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400" />
+          </div>
+          <div class="flex flex-col w-48">
+            <label for="entrada-data" class="text-sm font-semibold text-gray-700 mb-1">Data da Entrada</label>
+            <input type="date" id="entrada-data" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400" value="" />
+          </div>
+          <button type="submit" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold flex items-center gap-2">
+            <i data-lucide="plus-circle"></i> Registrar Entrada
+          </button>
+        </form>
+        <div id="entrada-msg" class="mt-4 text-sm"></div>
+      </section>
+
+      <!-- Movimentações -->
+      <section id="movimentacoes" class="hidden bg-white text-gray-800 p-2 md:p-6 rounded-2xl shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4 mb-4">
+          <h2 class="text-2xl font-semibold flex items-center gap-2">
+            <i data-lucide="shuffle" class="text-blue-400"></i>
+            Movimentações do Dia
+          </h2>
+          <div class="flex gap-2">
+            <button onclick="gerarMovimentacoesPDF()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1">
+              <i data-lucide="file-text"></i> Gerar PDF do Dia
+            </button>
+            <button id="btn-reset-movimentacoes" onclick="resetarMovimentacoes()" type="button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-1">
+              <i data-lucide="trash-2"></i> Resetar Movimentações
+            </button>
+          </div>
+        </div>
+        <div class="bg-gray-100 rounded-xl p-2 md:p-6 mb-4 md:mb-6 overflow-x-auto">
+          <h3 class="text-base md:text-lg font-semibold mb-2 text-gray-800">Entradas x Saídas (Últimos 7 dias)</h3>
+          <canvas id="graficoMovimentacoes" class="w-full min-w-[320px] h-48 md:h-64"></canvas>
+        </div>
+        <div class="overflow-x-auto rounded-lg shadow-inner">
+          <table class="w-full text-left border-collapse min-w-[400px] md:min-w-[600px]">
+            <thead>
+              <tr class="bg-gray-200 text-gray-700">
+                <th class="p-3 font-semibold">Data</th>
+                <th class="p-3 font-semibold">Tipo</th>
+                <th class="p-3 font-semibold">Produto</th>
+                <th class="p-3 font-semibold">Quantidade</th>
+                <th class="p-3 font-semibold">Usuário</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-movimentacoes" class="divide-y divide-gray-200">
+              <!-- Linhas via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Modal de edição de produto -->
+      <div id="modal-editar" class="fixed inset-0 z-50 flex justify-center bg-black/40 hidden overflow-y-auto">
+        <div class="bg-secondary text-white rounded-2xl shadow-xl w-full max-w-lg p-4 md:p-8 relative my-8 mt-16 mb-8 flex flex-col"
+             style="max-height:calc(100vh - 2rem); overflow-y:auto;">
+          <!-- Corrigido: remove 'items-center' do container externo para permitir rolagem do topo -->
+          <button onclick="fecharModalEditar()" class="absolute top-3 right-3 text-gray-400 hover:text-accent transition z-10">
+            <i data-lucide="x"></i>
+          </button>
+          <h3 class="text-2xl font-bold mb-6 flex items-center gap-2 mt-2">
+            <i data-lucide="edit-2" class="text-accent"></i>
+            Editar Produto
+          </h3>
+          <form id="form-editar-produto" class="grid grid-cols-1 gap-4">
+            <input type="hidden" name="idx" id="editar-idx" />
+            <div class="flex flex-col gap-1">
+              <label for="editar-nome" class="text-sm font-semibold text-gray-200">Nome *</label>
+              <input type="text" id="editar-nome" name="nome" required class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-quantidade" class="text-sm font-semibold text-gray-200">Quantidade *</label>
+              <input type="number" id="editar-quantidade" name="quantidade" min="0" required class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-minimo" class="text-sm font-semibold text-gray-200">Quantidade mínima *</label>
+              <input type="number" id="editar-minimo" name="minimo" min="0" required class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-categoria" class="text-sm font-semibold text-gray-200">Categoria</label>
+              <input type="text" id="editar-categoria" name="categoria" class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-fornecedor" class="text-sm font-semibold text-gray-200">Fornecedor</label>
+              <input type="text" id="editar-fornecedor" name="fornecedor" class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-validade" class="text-sm font-semibold text-gray-200">Validade</label>
+              <input type="date" id="editar-validade" name="validade" class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-observacoes" class="text-sm font-semibold text-gray-200">Observações</label>
+              <textarea id="editar-observacoes" name="observacoes" rows="2" class="p-3 rounded-lg border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-accent"></textarea>
+            </div>
+            <div class="flex flex-col gap-1">
+              <label for="editar-foto" class="text-sm font-semibold text-gray-200">Foto do produto</label>
+              <input type="file" id="editar-foto" name="foto" accept="image/*" class="p-3 border border-gray-600 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent" />
+              <div id="editar-preview-foto" class="mt-2"></div>
+            </div>
+            <button type="submit" class="bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center">
+              <i data-lucide="save"></i> Salvar Alterações
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      lucide.createIcons();
+
+      // URL da API backend
+      const API_URL = "http://localhost:3001/api";
+
+      // Autenticação: redireciona para login se não houver token
+      (function() {
+        const token = localStorage.getItem('lechef_token');
+        const usuario = localStorage.getItem('lechef_usuario');
+        if (!token || !usuario) {
+          window.location.href = "login.html";
+        } else {
+          // Mostra email do usuário logado no menu
+          const emailSpan = document.getElementById('usuario-logado-email');
+          if (emailSpan) emailSpan.textContent = usuario;
+        }
+      })();
+
+      function logout() {
+        localStorage.removeItem('lechef_token');
+        localStorage.removeItem('lechef_usuario');
+        window.location.href = "login.html";
+      }
+
+      // Esconde email do usuário quando sidebar encolhe
+      function toggleMenu() {
+        const sidebar = document.getElementById('sidebar');
+        const t = document.getElementById('t');
+        const t1 = document.getElementById('t1')
+        const t2 = document.getElementById('t2')
+        const t3 = document.getElementById('t3')
+        const t4 = document.getElementById('t4')
+        const t5 = document.getElementById('t5')
+        const email = document.getElementById('usuario-logado-email');
+        sidebar.classList.toggle('w-20');
+        sidebar.classList.toggle('w-64');
+        t.classList.toggle('none');
+        t.classList.toggle('hidden');
+        t1.classList.toggle('none');
+        t1.classList.toggle('hidden');
+        t2.classList.toggle('none');
+        t2.classList.toggle('hidden');
+        t3.classList.toggle('none');
+        t3.classList.toggle('hidden');
+        t4.classList.toggle('none');
+        t4.classList.toggle('hidden');
+        t5.classList.toggle('none');
+        t5.classList.toggle('hidden');
+        if (sidebar.classList.contains('w-20')) {
+          email.classList.add('hidden');
+        } else {
+          email.classList.remove('hidden');
+        }
+      }
+
+      const form = document.getElementById('form-produto');
+      const tabela = document.getElementById('tabela-estoque');
+      const graficoEl = document.getElementById('graficoProdutos');
+      let produtos = [];
+
+      // Filtro de busca para a lista de produtos
+      const filtroLista = document.getElementById('filtro-lista');
+
+      // --- API helpers ---
+      async function fetchProdutos() {
+        const res = await fetch(`${API_URL}/produtos`);
+        produtos = await res.json();
+      }
+
+      async function salvarProduto(produto) {
+        await fetch(`${API_URL}/produtos`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(produto)
+        });
+      }
+
+      async function atualizarProduto(id, produto) {
+        await fetch(`${API_URL}/produtos/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(produto)
+        });
+      }
+
+      async function removerProdutoAPI(id) {
+        await fetch(`${API_URL}/produtos/${id}`, { method: "DELETE" });
+      }
+
+      async function fetchMovimentacoes() {
+        const res = await fetch(`${API_URL}/movimentacoes`);
+        return await res.json();
+      }
+
+      async function salvarMovimentacao(mov) {
+        await fetch(`${API_URL}/movimentacoes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(mov)
+        });
+      }
+
+      async function resetarMovimentacoesAPI() {
+        await fetch(`${API_URL}/movimentacoes`, { method: "DELETE" });
+      }
+
+      // --- Dashboard ---
+      function atualizarDashboard() {
+        document.getElementById('total-produtos').textContent = produtos.length;
+        const categorias = new Set(produtos.map(p => p.categoria));
+        document.getElementById('total-categorias').textContent = categorias.size;
+        const comValidade = produtos.filter(p => p.validade).length;
+        document.getElementById('total-validade').textContent = comValidade;
+      }
+
+      // --- Renderização da tabela ---
+      async function renderTabela() {
+        await fetchProdutos();
+        const filtro = (filtroLista && filtroLista.value) ? filtroLista.value.trim().toLowerCase() : '';
+        tabela.innerHTML = '';
+        let produtosFiltrados = produtos;
+        if (filtro) {
+          produtosFiltrados = produtos.filter(p =>
+            (p.nome && p.nome.toLowerCase().includes(filtro)) ||
+            (p.categoria && p.categoria.toLowerCase().includes(filtro)) ||
+            (p.fornecedor && p.fornecedor.toLowerCase().includes(filtro))
+          );
+        }
+        if (!produtosFiltrados || produtosFiltrados.length === 0) {
+          tabela.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-gray-400">Nenhum produto encontrado.</td></tr>`;
+          atualizarDashboard();
+          gerarGrafico();
+          return;
+        }
+        const hoje = new Date();
+        produtosFiltrados.forEach((p, idx) => {
+          // Validade: vermelho se vencido ou a vencer em até 3 dias
+          let validadeClass = '';
+          let validadeEmoji = '';
+          let validadeTitle = '';
+          if (p.validade) {
+            const dataVal = new Date(p.validade + 'T23:59:59');
+            const diffDias = Math.ceil((dataVal - hoje) / (1000 * 60 * 60 * 24));
+            if (dataVal < hoje) {
+              validadeClass = 'text-red-600 font-bold';
+              validadeEmoji = '❌';
+              validadeTitle = 'Produto vencido';
+            } else if (diffDias <= 3) {
+              validadeClass = 'text-red-500 font-bold';
+              validadeEmoji = '⏰';
+              validadeTitle = `Vence em ${diffDias} dia(s)`;
+            }
+          }
+
+          // Quantidade: amarelo se <= mínimo, emoji de alerta
+          let quantidadeClass = '';
+          let quantidadeEmoji = '';
+          let quantidadeTitle = '';
+          if (p.quantidade <= p.minimo) {
+            quantidadeClass = 'text-yellow-500 font-bold';
+            quantidadeEmoji = '⚠️';
+            quantidadeTitle = 'Abaixo do mínimo em estoque';
+          }
+
+          tabela.innerHTML += `
+            <tr class="hover:bg-gray-50 transition ${p.quantidade <= p.minimo ? 'bg-yellow-50/60' : ''} ${validadeClass && !quantidadeClass ? 'bg-red-50/60' : ''}">
+              <td class="p-3 text-gray-400 text-sm">${idx + 1}</td>
+              <td class="p-3 font-semibold">${p.nome}</td>
+              <td class="p-3 ${quantidadeClass}">
+                <span ${quantidadeTitle ? `title="${quantidadeTitle}"` : ''}>
+                  ${p.quantidade} ${quantidadeEmoji}
+                </span>
+              </td>
+              <td class="p-3">${p.minimo}</td>
+              <td class="p-3">${p.categoria || '-'}</td>
+              <td class="p-3">${p.fornecedor || '-'}</td>
+              <td class="p-3 ${validadeClass}">
+                <span ${validadeTitle ? `title="${validadeTitle}"` : ''}>
+                  ${p.validade || '-'} ${validadeEmoji}
+                </span>
+              </td>
+              <td class="p-3 max-w-xs truncate" title="${p.observacoes || ''}">${p.observacoes ? p.observacoes.substring(0, 40) + (p.observacoes.length > 40 ? '...' : '') : '-'}</td>
+              <td class="p-3">${p.foto ? `<img src="${p.foto}" alt="foto" class="h-12 w-12 object-cover rounded shadow border border-gray-300" />` : '-'}</td>
+              <td class="p-3 space-x-2">
+                <button onclick="editarProduto(${produtos.indexOf(p)})" class="inline-flex items-center gap-1 text-blue-600 hover:underline font-semibold" title="Editar">
+                  <i data-lucide="edit-2" class="w-4 h-4"></i>
+                </button>
+                <button onclick="removerProduto(${produtos.indexOf(p)})" class="inline-flex items-center gap-1 text-red-600 hover:underline font-semibold" title="Remover">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        lucide.createIcons();
+        atualizarDashboard();
+        gerarGrafico();
+      }
+
+      // --- Modal edição ---
+      function abrirModalEditar(idx) {
+        // idx é o índice do produto no array produtos
+        const modal = document.getElementById('modal-editar');
+        const formEditar = document.getElementById('form-editar-produto');
+        const previewFoto = document.getElementById('editar-preview-foto');
+        const produto = produtos[idx];
+        document.getElementById('editar-idx').value = produto.id;
+        formEditar['nome'].value = produto.nome || '';
+        formEditar['quantidade'].value = produto.quantidade || '';
+        formEditar['minimo'].value = produto.minimo || '';
+        formEditar['categoria'].value = produto.categoria || '';
+        formEditar['fornecedor'].value = produto.fornecedor || '';
+        formEditar['validade'].value = produto.validade || '';
+        formEditar['observacoes'].value = produto.observacoes || '';
+        previewFoto.innerHTML = produto.foto ? `<img src="${produto.foto}" alt="Prévia da foto" class="h-20 w-20 object-cover rounded shadow border-2 border-accent" />` : '';
+        formEditar['foto'].value = '';
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+      }
+
+      function fecharModalEditar() {
+        document.getElementById('modal-editar').classList.add('hidden');
+      }
+
+      // Preview da foto no modal de edição
+      const editarFotoInput = document.getElementById('editar-foto');
+      const editarPreviewFoto = document.getElementById('editar-preview-foto');
+      if (editarFotoInput && editarPreviewFoto) {
+        editarFotoInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+              editarPreviewFoto.innerHTML = `<img src="${reader.result}" alt="Prévia da foto" class="h-20 w-20 object-cover rounded shadow border-2 border-accent" />`;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      // Submissão do formulário de edição
+      const formEditar = document.getElementById('form-editar-produto');
+      if (formEditar) {
+        formEditar.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const id = parseInt(document.getElementById('editar-idx').value, 10);
+          const data = new FormData(formEditar);
+          const produtoEditado = Object.fromEntries(data.entries());
+          produtoEditado.quantidade = parseInt(produtoEditado.quantidade);
+          produtoEditado.minimo = parseInt(produtoEditado.minimo);
+
+          // Atualiza foto se o usuário selecionar uma nova
+          const fotoFile = data.get('foto');
+          if (fotoFile && fotoFile.size > 0) {
+            const reader = new FileReader();
+            reader.onload = async () => {
+              produtoEditado.foto = reader.result;
+              await atualizarProduto(id, produtoEditado);
+              fecharModalEditar();
+              renderTabela();
+            };
+            reader.readAsDataURL(fotoFile);
+          } else {
+            // Mantém a foto antiga se não selecionar nova
+            const old = produtos.find(p => p.id === id);
+            produtoEditado.foto = old && old.foto ? old.foto : null;
+            await atualizarProduto(id, produtoEditado);
+            fecharModalEditar();
+            renderTabela();
+          }
+        });
+      }
+
+      function editarProduto(i) {
+        abrirModalEditar(i);
+      }
+
+      async function removerProduto(i) {
+        const id = produtos[i].id;
+        await removerProdutoAPI(id);
+        renderTabela();
+      }
+
+      // Sidebar active state
+      function setActiveNav(secao) {
+        ['dashboard', 'cadastro', 'lista'].forEach(id => {
+          const btn = document.getElementById('nav-' + id);
+          if (btn) {
+            if (id === secao) {
+              btn.classList.add('bg-accent/30', 'text-accent', 'font-semibold');
+            } else {
+              btn.classList.remove('bg-accent/30', 'text-accent', 'font-semibold');
+            }
+          }
+        });
+      }
+
+      // --- Mostrar seção ---
+      function mostrarSecao(secao) {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(secao).classList.remove('hidden');
+        setActiveNav(secao);
+        if (secao === 'movimentacoes') renderMovimentacoes();
+        if (secao === 'dashboard') {
+          atualizarDashboard();
+          gerarGrafico();
+        }
+        if (secao === 'lista') {
+          renderTabela();
+        }
+        if (secao === 'entrada' || secao === 'saida') {
+          atualizarSelectProdutos();
+        }
+      }
+
+      // --- Cadastro de produto ---
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        const produto = Object.fromEntries(data.entries());
+        produto.quantidade = parseInt(produto.quantidade);
+        produto.minimo = parseInt(produto.minimo);
+        const fotoFile = data.get('foto');
+
+        if (fotoFile && fotoFile.size > 0) {
+          const reader = new FileReader();
+          reader.onload = async () => {
+            produto.foto = reader.result;
+            await salvarProduto(produto);
+            form.reset();
+            renderTabela();
+          };
+          reader.readAsDataURL(fotoFile);
+        } else {
+          produto.foto = null;
+          await salvarProduto(produto);
+          form.reset();
+          renderTabela();
+        }
+      });
+
+      // --- Gráfico ---
+      function gerarGrafico() {
+        if (!graficoEl) return;
+        const ctx = graficoEl.getContext('2d');
+        if (window.chartProdutos) window.chartProdutos.destroy();
+
+        // Corrige: só gera gráfico se houver produtos
+        if (!Array.isArray(produtos) || produtos.length === 0) {
+          return;
+        }
+
+        // Cores: laranja (normal), preto (vencido), amarelo (abaixo do mínimo), vermelho (próximo do vencimento)
+        const hoje = new Date();
+        const cores = produtos.map(p => {
+          // Vencido
+          if (p.validade) {
+            const dataVal = new Date(p.validade + 'T23:59:59');
+            const diffDias = Math.ceil((dataVal - hoje) / (1000 * 60 * 60 * 24));
+            if (dataVal < hoje) return "#000000"; // preto
+            if (diffDias <= 3) return "#ef4444"; // vermelho
+          }
+          if (p.quantidade <= p.minimo) return "#fde047"; // amarelo
+          return "#f97316"; // laranja
+        });
+
+        // Linha de quantidade mínima (pega o menor valor de mínimo, se houver)
+        const minimos = produtos.map(p => p.minimo);
+        const temMinimos = minimos.length > 0 && minimos.some(m => m !== undefined && m !== null);
+
+        window.chartProdutos = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: produtos.map(p => p.nome),
+            datasets: [
+              {
+                label: 'Quantidade',
+                data: produtos.map(p => p.quantidade),
+                backgroundColor: cores,
+                borderRadius: 8,
+                borderSkipped: false,
+              },
+              // Linha de quantidade mínima
+              temMinimos
+                ? {
+                    type: 'line',
+                    label: 'Quantidade Mínima',
+                    data: produtos.map(p => p.minimo),
+                    borderColor: '#ef4444',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0,
+                    order: 0,
+                  }
+                : null,
+            ].filter(Boolean),
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: true,
+                labels: {
+                  color: '#1f2937',
+                  font: { weight: 'bold' },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    if (context.dataset.type === 'line') {
+                      return `Mínimo: ${context.parsed.y}`;
+                    }
+                    const p = produtos[context.dataIndex];
+                    // Legenda de cor
+                    let cor = cores[context.dataIndex];
+                    let status = '';
+                    if (cor === "#000000") status = " (Vencido)";
+                    else if (cor === "#ef4444") status = " (Próx. vencimento)";
+                    else if (cor === "#fde047") status = " (Abaixo do mínimo)";
+                    else if (cor === "#f97316") status = " (Normal)";
+                    return [
+                      `Quantidade: ${p.quantidade}${status}`,
+                      `Mínimo: ${p.minimo}`,
+                      `Categoria: ${p.categoria || '-'}`,
+                      `Fornecedor: ${p.fornecedor || '-'}`,
+                      `Validade: ${p.validade || '-'}`
+                    ];
+                  }
+                }
+              },
+              title: {
+                display: false,
+              },
+            },
+            scales: {
+              x: {
+                ticks: { color: '#1f2937' },
+                grid: { color: '#e5e7eb' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#1f2937' },
+                grid: { color: '#e5e7eb' }
+              }
+            }
+          }
+        });
+      }
+
+      function exportarCSV() {
+        // Cabeçalho customizado e ordenação de colunas
+        const colunas = [
+          { label: "Produto", key: "nome" },
+          { label: "Quantidade", key: "quantidade" },
+          { label: "Mínimo", key: "minimo" },
+          { label: "Categoria", key: "categoria" },
+          { label: "Fornecedor", key: "fornecedor" },
+          { label: "Validade", key: "validade" },
+          { label: "Observações", key: "observacoes" }
+        ];
+        const dados = produtos.map(p => {
+          const obj = {};
+          colunas.forEach(col => obj[col.label] = p[col.key] || "-");
+          return obj;
+        });
+        const csv = Papa.unparse({
+          fields: colunas.map(c => c.label),
+          data: dados.map(obj => colunas.map(c => obj[c.label]))
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `estoque_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      function gerarPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'landscape',
+          unit: 'pt',
+          format: 'A4'
+        });
+
+        // Título estilizado
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.setTextColor(249, 115, 22); // #f97316
+        doc.text('Le Chef - Relatório de Estoque', 40, 50);
+
+        // Data
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        // Data/hora formato dd/mm/aaaa HH:MM:SS
+        function formatarDataBR(date) {
+          const d = date.getDate().toString().padStart(2, '0');
+          const m = (date.getMonth() + 1).toString().padStart(2, '0');
+          const a = date.getFullYear();
+          const h = date.getHours().toString().padStart(2, '0');
+          const min = date.getMinutes().toString().padStart(2, '0');
+          const s = date.getSeconds().toString().padStart(2, '0');
+          return `${d}/${m}/${a} ${h}:${min}:${s}`;
+        }
+        doc.text(`Gerado em: ${formatarDataBR(new Date())}`, 40, 70);
+
+        // Cabeçalho da tabela
+        const colunas = [
+          "Produto", "Quant.", "Mín.", "Categoria", "Fornecedor", "Validade", "Observações"
+        ];
+        const startY = 100;
+        let y = startY;
+        let x = 40;
+        const rowHeight = 26;
+        const colWidths = [110, 55, 45, 80, 90, 120, 210];
+
+        // Cabeçalho
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setFillColor(249, 115, 22);
+        doc.setTextColor(255,255,255);
+        let colX = x;
+        colunas.forEach((col, i) => {
+          doc.rect(colX, y, colWidths[i], rowHeight, 'F');
+          doc.text(col, colX + 6, y + 17, { maxWidth: colWidths[i] - 12 });
+          colX += colWidths[i];
+        });
+
+        // Linhas
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        y += rowHeight;
+        const hoje = new Date();
+        produtos.forEach((p, idx) => {
+          colX = x;
+          // Cores e emojis
+          let corLinha = [255,255,255];
+          let corTextoQtd = [40,40,40];
+          let corTextoVal = [40,40,40];
+          let emojiQtd = '';
+          let emojiVal = '';
+
+          // Validade
+          if (p.validade) {
+            // Suporte para datetime-local (aaaa-mm-ddThh:mm)
+            let dataVal;
+            if (p.validade.length > 10) {
+              // datetime-local
+              dataVal = new Date(p.validade);
+            } else {
+              // Apenas data
+              dataVal = new Date(p.validade + 'T23:59:59');
+            }
+            const diffDias = Math.ceil((dataVal - hoje) / (1000 * 60 * 60 * 24));
+            if (dataVal < hoje) {
+              corLinha = [255, 228, 230]; // vermelho claro
+              corTextoVal = [220, 38, 38]; // vermelho
+              emojiVal = '❌';
+            } else if (diffDias <= 3) {
+              corLinha = [254, 242, 242]; // vermelho muito claro
+              corTextoVal = [239, 68, 68];
+              emojiVal = '⏰';
+            }
+          }
+          // Quantidade
+          if (p.quantidade <= p.minimo) {
+            corLinha = [254, 249, 195]; // amarelo claro
+            corTextoQtd = [202, 138, 4]; // amarelo
+            emojiQtd = '⚠️';
+          }
+
+          // Alterna cor de fundo se não houver aviso
+          if (emojiVal === '' && emojiQtd === '' && idx % 2 === 0) {
+            corLinha = [245, 245, 245];
+          }
+
+          // Fundo da linha
+          doc.setFillColor(...corLinha);
+          doc.rect(x, y, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+
+          // Formatar validade para dd/mm/aaaa HH:MM se for datetime-local
+          let validadeFormatada = "-";
+          if (p.validade) {
+            let dt;
+            if (p.validade.length > 10) {
+              dt = new Date(p.validade);
+              const d = dt.getDate().toString().padStart(2, '0');
+              const m = (dt.getMonth() + 1).toString().padStart(2, '0');
+              const a = dt.getFullYear();
+              const h = dt.getHours().toString().padStart(2, '0');
+              const min = dt.getMinutes().toString().padStart(2, '0');
+              validadeFormatada = `${d}/${m}/${a} ${h}:${min}`;
+            } else {
+              dt = new Date(p.validade + 'T00:00:00');
+              const d = dt.getDate().toString().padStart(2, '0');
+              const m = (dt.getMonth() + 1).toString().padStart(2, '0');
+              const a = dt.getFullYear();
+              validadeFormatada = `${d}/${m}/${a}`;
+            }
+            if (emojiVal) validadeFormatada += " " + emojiVal;
+          }
+
+          // Sanitizar observações para evitar & e outros caracteres HTML
+          function sanitizeText(txt) {
+            if (!txt) return "-";
+            return String(txt)
+              .replace(/&/g, "e")
+              .replace(/</g, "")
+              .replace(/>/g, "")
+              .replace(/"/g, "")
+              .replace(/'/g, "")
+              .replace(/\n/g, " ")
+              .replace(/\r/g, " ");
+          }
+
+          const linha = [
+            sanitizeText(p.nome) || "-",
+            String(p.quantidade ?? "-") + (emojiQtd ? " " + emojiQtd : ""),
+            String(p.minimo ?? "-"),
+            sanitizeText(p.categoria) || "-",
+            sanitizeText(p.fornecedor) || "-",
+            validadeFormatada,
+            (p.observacoes ? sanitizeText(p.observacoes.length > 60 ? p.observacoes.substring(0, 57) + "..." : p.observacoes) : "-")
+          ];
+
+          // Texto das colunas com cor especial para quantidade e validade
+          for (let i = 0; i < linha.length; i++) {
+            let txt = linha[i];
+            let color = [40,40,40];
+            if (i === 1 && emojiQtd) color = corTextoQtd;
+            if (i === 5 && emojiVal) color = corTextoVal;
+            doc.setTextColor(...color);
+            doc.text(String(txt), colX + 6, y + 17, { maxWidth: colWidths[i] - 12 });
+            colX += colWidths[i];
+          }
+          y += rowHeight;
+          // Quebra página se necessário
+          if (y > 520) {
+            doc.addPage();
+            y = startY + rowHeight;
+            // Repete cabeçalho
+            colX = x;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setFillColor(249, 115, 22);
+            doc.setTextColor(255,255,255);
+            colunas.forEach((col, i) => {
+              doc.rect(colX, startY, colWidths[i], rowHeight, 'F');
+              doc.text(col, colX + 6, startY + 17, { maxWidth: colWidths[i] - 12 });
+              colX += colWidths[i];
+            });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+          }
+        });
+
+        // Rodapé
+        doc.setFontSize(10);
+        doc.setTextColor(140,140,140);
+        doc.text('Le Chef - Controle de Estoque', 40, 570);
+
+        doc.save(`estoque_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`);
+      }
+
+      // Movimentações (entrada/saída)
+      async function getMovimentacoes() {
+        return await fetchMovimentacoes();
+      }
+      async function setMovimentacoes(movs) {
+        // Não usado, pois a API já faz persistência
+      }
+      async function registrarMovimentacao(tipo, produto, quantidade, data, usuario) {
+        await salvarMovimentacao({ tipo, produto, quantidade, data, usuario });
+      }
+      async function renderMovimentacoes() {
+        const tbody = document.getElementById('tabela-movimentacoes');
+        if (!tbody) return;
+        const hoje = new Date();
+        const hojeStr = hoje.toISOString().slice(0, 10);
+        const usuario = localStorage.getItem('lechef_usuario') || '-';
+        const movs = (await fetchMovimentacoes()).filter(m => m.data && m.data.startsWith(hojeStr));
+        tbody.innerHTML = movs.length
+          ? movs.map(m =>
+              `<tr>
+                <td class="p-3">${formatarDataBR(new Date(m.data))}</td>
+                <td class="p-3 font-bold ${m.tipo === 'Saída' ? 'text-red-500' : 'text-green-600'}">${m.tipo}</td>
+                <td class="p-3">${m.produto}</td>
+                <td class="p-3">${m.quantidade}</td>
+                <td class="p-3">${m.usuario}</td>
+              </tr>`
+            ).join('')
+          : `<tr><td colspan="5" class="text-center py-8 text-gray-400">Nenhuma movimentação registrada hoje.</td></tr>`;
+      }
+
+      // Resetar movimentações
+      async function resetarMovimentacoes() {
+        if (confirm('Tem certeza que deseja apagar todas as movimentações?')) {
+          await resetarMovimentacoesAPI();
+          renderMovimentacoes();
+        }
+      }
+
+      // Atualiza selects de produtos nas telas de entrada/saída
+      async function atualizarSelectProdutos() {
+        await fetchProdutos();
+        const saidaSelect = document.getElementById('saida-produto');
+        const entradaSelect = document.getElementById('entrada-produto');
+        if (saidaSelect) {
+          saidaSelect.innerHTML = produtos.length
+            ? produtos.map((p, i) => `<option value="${i}">${p.nome} (${p.quantidade > 0 ? p.quantidade : 'Em falta'})</option>`).join('')
+            : '<option value="">Nenhum produto cadastrado</option>';
+        }
+        if (entradaSelect) {
+          entradaSelect.innerHTML = produtos.length
+            ? produtos.map((p, i) => `<option value="${i}">${p.nome} (${p.quantidade})</option>`).join('')
+            : '<option value="">Nenhum produto cadastrado</option>';
+        }
+      }
+
+      // Saída de produto
+      const formSaida = document.getElementById('form-saida');
+      if (formSaida) {
+        formSaida.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          await fetchProdutos();
+          const idx = parseInt(document.getElementById('saida-produto').value, 10);
+          const qtd = parseInt(document.getElementById('saida-quantidade').value, 10);
+          let dataSaida = document.getElementById('saida-data').value;
+          const msg = document.getElementById('saida-msg');
+          const usuario = localStorage.getItem('lechef_usuario') || '-';
+          if (!dataSaida) {
+            const hoje = new Date();
+            dataSaida = hoje
+          } else {
+            const dt = new Date(dataSaida + "T00:00:00");
+            dt.setMinutes(dt.getMinutes() + dt.getTimezoneOffset());
+            dataSaida = dt
+          }
+          if (isNaN(idx) || isNaN(qtd) || idx < 0 || qtd < 1) {
+            msg.textContent = "Selecione um produto e uma quantidade válida.";
+            msg.className = "mt-4 text-red-500";
+            return;
+          }
+          if (produtos[idx].quantidade < qtd) {
+            msg.textContent = "Quantidade insuficiente em estoque.";
+            msg.className = "mt-4 text-red-500";
+            return;
+          }
+          produtos[idx].quantidade -= qtd;
+          await atualizarProduto(produtos[idx].id, produtos[idx]);
+          if (produtos[idx].quantidade <= 0) {
+            produtos[idx].quantidade = 0;
+            msg.textContent = `Produto "${produtos[idx].nome}" está em falta no estoque!`;
+            msg.className = "mt-4 text-red-600 font-bold";
+          } else {
+            msg.textContent = `Saída registrada com sucesso. Estoque atual: ${produtos[idx].quantidade}`;
+            msg.className = "mt-4 text-green-600";
+          }
+          await registrarMovimentacao('Saída', produtos[idx].nome, qtd, dataSaida, usuario);
+          renderTabela();
+          atualizarSelectProdutos();
+          renderMovimentacoes();
+        });
+      }
+
+      // Entrada de produto
+      const formEntrada = document.getElementById('form-entrada');
+      if (formEntrada) {
+        formEntrada.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          await fetchProdutos();
+          const idx = parseInt(document.getElementById('entrada-produto').value, 10);
+          const qtd = parseInt(document.getElementById('entrada-quantidade').value, 10);
+          let dataEntrada = document.getElementById('entrada-data').value;
+          const msg = document.getElementById('entrada-msg');
+          const usuario = localStorage.getItem('lechef_usuario') || '-';
+          if (!dataEntrada) {
+            const hoje = new Date();
+            dataEntrada = hoje
+          } else {
+            const dt = new Date(dataEntrada + "T00:00:00");
+            dt.setMinutes(dt.getMinutes() + dt.getTimezoneOffset());
+            dataEntrada = dt
+          }
+          if (isNaN(idx) || isNaN(qtd) || idx < 0 || qtd < 1) {
+            msg.textContent = "Selecione um produto e uma quantidade válida.";
+            msg.className = "mt-4 text-red-500";
+            return;
+          }
+          produtos[idx].quantidade += qtd;
+          await atualizarProduto(produtos[idx].id, produtos[idx]);
+          msg.textContent = `Entrada registrada com sucesso. Estoque atual: ${produtos[idx].quantidade}`;
+          msg.className = "mt-4 text-green-600";
+          await registrarMovimentacao('Entrada', produtos[idx].nome, qtd, dataEntrada, usuario);
+          renderTabela();
+          atualizarSelectProdutos();
+          renderMovimentacoes();
+        });
+      }
+
+      // --- Gráfico de movimentações reutilizável ---
+      async function gerarGraficoMovimentacoes(canvasId = 'graficoMovimentacoes') {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        if (window[`chartMovimentacoes_${canvasId}`]) window[`chartMovimentacoes_${canvasId}`].destroy();
+
+        const movs = await fetchMovimentacoes();
+        const dias = [];
+        const entradas = [];
+        const saidas = [];
+        const hoje = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(hoje);
+          d.setDate(hoje.getDate() - i);
+          const diaStr = d.toISOString().slice(0, 10);
+          dias.push(`${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}`);
+          const movsDia = movs.filter(m => m.data && m.data.startsWith(diaStr));
+          entradas.push(movsDia.filter(m => m.tipo === 'Entrada').reduce((s, m) => s + Number(m.quantidade), 0));
+          saidas.push(movsDia.filter(m => m.tipo === 'Saída').reduce((s, m) => s + Number(m.quantidade), 0));
+        }
+
+        window[`chartMovimentacoes_${canvasId}`] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: dias,
+            datasets: [
+              {
+                label: 'Entradas',
+                data: entradas,
+                backgroundColor: '#22c55e',
+                borderRadius: 6,
+                borderSkipped: false,
+              },
+              {
+                label: 'Saídas',
+                data: saidas,
+                backgroundColor: '#ef4444',
+                borderRadius: 6,
+                borderSkipped: false,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: true,
+                labels: { color: '#1f2937', font: { weight: 'bold' } }
+              },
+              title: { display: false }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#1f2937' },
+                grid: { color: '#e5e7eb' }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#1f2937' },
+                grid: { color: '#e5e7eb' }
+              }
+            }
+          }
+        });
+      }
+
+      // --- Renderiza movimentações ao abrir seção ---
+      async function renderMovimentacoes() {
+        const tbody = document.getElementById('tabela-movimentacoes');
+        if (!tbody) return;
+        const hoje = new Date();
+        const hojeStr = hoje.toISOString().slice(0, 10);
+        const usuario = localStorage.getItem('lechef_usuario') || '-';
+        const movs = (await fetchMovimentacoes()).filter(m => m.data && m.data.startsWith(hojeStr));
+        tbody.innerHTML = movs.length
+          ? movs.map(m =>
+              `<tr>
+                <td class="p-3">${formatarDataBR(new Date(m.data))}</td>
+                <td class="p-3 font-bold ${m.tipo === 'Saída' ? 'text-red-500' : 'text-green-600'}">${m.tipo}</td>
+                <td class="p-3">${m.produto}</td>
+                <td class="p-3">${m.quantidade}</td>
+                <td class="p-3">${m.usuario}</td>
+              </tr>`
+            ).join('')
+          : `<tr><td colspan="5" class="text-center py-8 text-gray-400">Nenhuma movimentação registrada hoje.</td></tr>`;
+        await gerarGraficoMovimentacoes('graficoMovimentacoes');
+      }
+
+      // --- Gráfico de movimentações no dashboard ---
+      async function renderDashboardMovimentacoes() {
+        await gerarGraficoMovimentacoes('graficoMovimentacoesDashboard');
+      }
+
+      // Atualiza tudo ao recarregar a página (F5 ou reload)
+      window.addEventListener('load', () => {
+        renderTabela();
+        atualizarDashboard();
+        gerarGrafico();
+        atualizarSelectProdutos();
+        renderMovimentacoes();
+        renderDashboardMovimentacoes();
+      });
+
+      // Renderiza movimentações ao abrir seção
+      function mostrarSecao(secao) {
+        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+        document.getElementById(secao).classList.remove('hidden');
+        setActiveNav(secao);
+        if (secao === 'movimentacoes') renderMovimentacoes();
+        if (secao === 'dashboard') {
+          atualizarDashboard();
+          gerarGrafico();
+        }
+        if (secao === 'lista') {
+          renderTabela();
+        }
+        if (secao === 'entrada' || secao === 'saida') {
+          atualizarSelectProdutos();
+        }
+      }
+
+      // Função para formatar data BR
+      function formatarDataBR(date) {
+        if (!date) return '-';
+        if (typeof date === 'string') date = new Date(date);
+        const d = date.getDate().toString().padStart(2, '0');
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const a = date.getFullYear();
+        return `${d}/${m}/${a}`;
+      }
+
+      // Gerar PDF das movimentações do dia
+      async function gerarMovimentacoesPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: 'landscape',
+          unit: 'pt',
+          format: 'A4'
+        });
+        const hoje = new Date();
+        const hojeStr = hoje.toISOString().slice(0, 10);
+        // Corrigido: buscar movimentações do dia de forma assíncrona
+        const movsAll = await fetchMovimentacoes();
+        const movs = movsAll.filter(m => m.data && m.data.startsWith(hojeStr));
+        // Título
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.setTextColor(249, 115, 22);
+        doc.text('Le Chef - Movimentações do Dia', 40, 50);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Gerado em: ${formatarDataBR(new Date())} ${new Date().toLocaleTimeString('pt-BR')}`, 40, 70);
+
+        // Cabeçalho
+        const colunas = ["Data", "Tipo", "Produto", "Quantidade", "Usuário"];
+        const colWidths = [90, 70, 200, 80, 200];
+        let x = 40, y = 100, rowHeight = 26;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(13);
+        doc.setFillColor(249, 115, 22); // viva laranja
+        doc.setTextColor(255,255,255);
+        let colX = x;
+        colunas.forEach((col, i) => {
+          doc.rect(colX, y, colWidths[i], rowHeight, 'F');
+          doc.text(col, colX + 6, y + 17, { maxWidth: colWidths[i] - 12 });
+          colX += colWidths[i];
+        });
+
+        // Linhas
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        y += rowHeight;
+        movs.forEach((m, idx) => {
+          colX = x;
+          // Cores vivas: verde para entrada, vermelho para saída, alterna cinza claro para linhas normais
+          let corLinha;
+          if (m.tipo === 'Entrada') {
+            corLinha = [34, 197, 94]; // verde vivo
+          } else if (m.tipo === 'Saída') {
+            corLinha = [239, 68, 68]; // vermelho vivo
+          } else {
+            corLinha = idx % 2 === 0 ? [245, 245, 245] : [255, 255, 255];
+          }
+          doc.setFillColor(...corLinha);
+          doc.rect(x, y, colWidths.reduce((a, b) => a + b, 0), rowHeight, 'F');
+          const linha = [
+            formatarDataBR(m.data),
+            m.tipo,
+            m.produto,
+            String(m.quantidade),
+            m.usuario
+          ];
+          for (let i = 0; i < linha.length; i++) {
+            doc.setTextColor(40,40,40);
+            doc.text(String(linha[i]), colX + 6, y + 17, { maxWidth: colWidths[i] - 12 });
+            colX += colWidths[i];
+          }
+          y += rowHeight;
+          if (y > 520) {
+            doc.addPage();
+            y = 100 + rowHeight;
+            // Repete cabeçalho
+            colX = x;
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.setFillColor(249, 115, 22);
+            doc.setTextColor(255,255,255);
+            colunas.forEach((col, i) => {
+              doc.rect(colX, 100, colWidths[i], rowHeight, 'F');
+              doc.text(col, colX + 6, 100 + 17, { maxWidth: colWidths[i] - 12 });
+              colX += colWidths[i];
+            });
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(11);
+          }
+        });
+
+        // Rodapé
+        doc.setFontSize(10);
+        doc.setTextColor(140,140,140);
+        doc.text('Le Chef - Controle de Estoque', 40, 570);
+
+        doc.save(`movimentacoes_${formatarDataBR(new Date()).replace(/\//g, '-')}.pdf`);
+      }
+    </script
