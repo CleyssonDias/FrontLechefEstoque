@@ -26,61 +26,87 @@
       };
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      /* Melhorias extras para responsividade */
+      @media (max-width: 640px) {
+        .min-w-\[600px\], .min-w-\[900px\], .min-w-\[400px\] {
+          min-width: 0 !important;
+        }
+        .rounded-2xl, .rounded-xl, .rounded-lg {
+          border-radius: 1rem !important;
+        }
+        .p-6, .md\:p-6, .md\:p-8 {
+          padding: 1rem !important;
+        }
+        .space-y-8, .md\:space-y-12 {
+          row-gap: 1.5rem !important;
+        }
+      }
+    </style>
   </head>
-  <body class="flex flex-col md:flex-row bg-primary text-white font-sans min-h-screen">
+  <body class="flex flex-col md:flex-row bg-primary text-white font-sans min-h-screen relative">
+    <!-- Overlay para mobile menu -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden transition-opacity duration-300"></div>
+    <!-- Botão hambúrguer mobile -->
+    <button id="btn-hamburguer" class="fixed top-4 left-4 z-40 md:hidden bg-accent p-2 rounded-full shadow-lg focus:outline-none hover:bg-orange-500 transition" onclick="abrirSidebar()" aria-label="Abrir menu">
+      <i data-lucide="menu" class="w-7 h-7"></i>
+    </button>
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-full md:w-64 bg-secondary flex flex-row md:flex-col px-2 md:px-4 py-4 md:py-6 space-y-0 md:space-y-8 shadow-lg transition-all duration-300 min-h-[60px] md:min-h-screen relative z-20">
+    <aside id="sidebar" class="fixed md:static top-0 left-0 h-full w-72 md:w-64 bg-gradient-to-b from-secondary to-primary flex flex-col px-4 py-6 space-y-0 md:space-y-8 shadow-2xl transition-transform duration-300 min-h-[60px] md:min-h-screen z-40
+      -translate-x-full md:translate-x-0 border-r border-gray-700"
+      style="transition:transform 0.3s;">
       <!-- Logo/Header -->
-      <div class="flex items-center space-x-3 mb-4 md:mb-6 px-2 w-full">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/chef-hat.png" alt="Le Chef Logo" class="h-10 w-10" />
-        <span id="t" class="text-3xl font-bold text-accent hidden sm:inline">Le Chef</span>
-        <button onclick="toggleMenu()" class="ml-auto text-white hover:text-accent transition md:hidden">
-          <i data-lucide="chevron-left"></i>
+      <div class="flex items-center space-x-3 mb-6 px-2 w-full">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/chef-hat.png" alt="Le Chef Logo" class="h-12 w-12 drop-shadow-lg" />
+        <span id="t" class="text-3xl font-extrabold text-accent drop-shadow-lg hidden sm:inline tracking-tight">Le Chef</span>
+        <!-- Botão fechar só no mobile -->
+        <button id="btn-fechar-sidebar" onclick="fecharSidebar()" class="ml-auto text-white hover:text-accent transition md:hidden bg-gray-800/70 rounded-full p-2" aria-label="Fechar menu" style="display:none;">
+          <i data-lucide="x" class="w-6 h-6"></i>
         </button>
       </div>
       <!-- Usuário logado -->
-      <div id="usuario-logado" class="flex items-center gap-2 px-2 mb-2 text-sm text-gray-300 transition-all w-full">
-        <i data-lucide="user" class="w-4 h-4 text-accent"></i>
-        <span id="usuario-logado-email" class="sidebar-email hidden sm:inline"> </span>
+      <div id="usuario-logado" class="flex items-center gap-2 px-2 mb-4 text-sm text-gray-300 transition-all w-full">
+        <i data-lucide="user" class="w-5 h-5 text-accent"></i>
+        <span id="usuario-logado-email" class="sidebar-email hidden sm:inline font-semibold"> </span>
       </div>
       <!-- Navigation -->
-      <nav class="flex flex-row md:flex-col space-x-2 md:space-x-0 space-y-0 md:space-y-2 w-full overflow-x-auto md:overflow-visible">
-        <button onclick="mostrarSecao('dashboard')" id="nav-dashboard" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
-          <i data-lucide="layout-dashboard" class="group-hover:text-accent"></i>
+      <nav class="flex flex-col space-y-2 w-full overflow-x-auto md:overflow-visible">
+        <button onclick="mostrarSecao('dashboard');fecharSidebarMobile()" id="nav-dashboard" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-accent/20 hover:text-accent transition group font-medium shadow-sm">
+          <i data-lucide="layout-dashboard" class="group-hover:text-accent w-5 h-5"></i>
           <span id="t1" class="transition">Dashboard</span>
         </button>
-        <button onclick="mostrarSecao('cadastro')" id="nav-cadastro" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
-          <i data-lucide="plus-circle" class="group-hover:text-accent"></i>
+        <button onclick="mostrarSecao('cadastro');fecharSidebarMobile()" id="nav-cadastro" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-accent/20 hover:text-accent transition group font-medium shadow-sm">
+          <i data-lucide="plus-circle" class="group-hover:text-accent w-5 h-5"></i>
           <span id="t2" class="transition">Novo Produto</span>
         </button>
-        <button onclick="mostrarSecao('lista')" id="nav-lista" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
-          <i data-lucide="list" class="group-hover:text-accent"></i>
+        <button onclick="mostrarSecao('lista');fecharSidebarMobile()" id="nav-lista" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-accent/20 hover:text-accent transition group font-medium shadow-sm">
+          <i data-lucide="list" class="group-hover:text-accent w-5 h-5"></i>
           <span id="t3" class="transition">Lista de Produtos</span>
         </button>
-        <button onclick="mostrarSecao('saida')" id="nav-saida" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-red-500/20 hover:text-red-400 transition group">
-          <i data-lucide="arrow-down-circle" class="group-hover:text-red-400"></i>
+        <button onclick="mostrarSecao('saida');fecharSidebarMobile()" id="nav-saida" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-red-500/20 hover:text-red-400 transition group font-medium shadow-sm">
+          <i data-lucide="arrow-down-circle" class="group-hover:text-red-400 w-5 h-5"></i>
           <span class="transition">Saídas</span>
         </button>
-        <button onclick="mostrarSecao('entrada')" id="nav-entrada" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-green-500/20 hover:text-green-400 transition group">
-          <i data-lucide="arrow-up-circle" class="group-hover:text-green-400"></i>
+        <button onclick="mostrarSecao('entrada');fecharSidebarMobile()" id="nav-entrada" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-green-500/20 hover:text-green-400 transition group font-medium shadow-sm">
+          <i data-lucide="arrow-up-circle" class="group-hover:text-green-400 w-5 h-5"></i>
           <span class="transition">Entradas</span>
         </button>
-        <button onclick="mostrarSecao('movimentacoes')" id="nav-movimentacoes" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-blue-500/20 hover:text-blue-400 transition group">
-          <i data-lucide="shuffle" class="group-hover:text-blue-400"></i>
+        <button onclick="mostrarSecao('movimentacoes');fecharSidebarMobile()" id="nav-movimentacoes" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-blue-500/20 hover:text-blue-400 transition group font-medium shadow-sm">
+          <i data-lucide="shuffle" class="group-hover:text-blue-400 w-5 h-5"></i>
           <span class="transition">Movimentações</span>
         </button>
         <hr class="my-3 border-gray-600" />
-        <button onclick="exportarCSV()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
-          <i data-lucide="download" class="group-hover:text-accent"></i>
+        <button onclick="exportarCSV();fecharSidebarMobile()" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-accent/20 hover:text-accent transition group font-medium shadow-sm">
+          <i data-lucide="download" class="group-hover:text-accent w-5 h-5"></i>
           <span id="t4" class="transition">Exportar CSV</span>
         </button>
-        <button onclick="gerarPDF()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-accent/20 hover:text-accent transition group">
-          <i data-lucide="file-text" class="group-hover:text-accent"></i>
+        <button onclick="gerarPDF();fecharSidebarMobile()" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-accent/20 hover:text-accent transition group font-medium shadow-sm">
+          <i data-lucide="file-text" class="group-hover:text-accent w-5 h-5"></i>
           <span id="t5" class="transition">Gerar PDF</span>
         </button>
-        <button onclick="logout()" class="flex items-center space-x-2 px-3 py-2 rounded-lg text-white hover:bg-red-600 hover:text-white transition group mt-2">
-          <i data-lucide="log-out" class="group-hover:text-white"></i>
-          <span class="class="transition">Sair</span>
+        <button onclick="logout();fecharSidebarMobile()" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-white hover:bg-red-600 hover:text-white transition group mt-2 font-medium shadow-sm">
+          <i data-lucide="log-out" class="group-hover:text-white w-5 h-5"></i>
+          <span class="transition">Sair</span>
         </button>
       </nav>
       <!-- Footer -->
@@ -125,7 +151,7 @@
           <i data-lucide="plus-circle" class="text-accent"></i>
           Cadastrar Novo Produto
         </h2>
-        <form id="form-produto" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form id="form-produto" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div class="flex flex-col gap-2">
             <label for="nome" class="text-sm text-gray-300 font-semibold">Nome do produto *</label>
             <input type="text" id="nome" placeholder="Ex: Arroz Integral" name="nome" required class="p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent placeholder-gray-400" />
@@ -159,7 +185,7 @@
             <input type="file" id="foto" name="foto" accept="image/*" class="p-4 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-orange-600 transition" />
             <div id="preview-foto" class="mt-2"></div>
           </div>
-          <button type="submit" class="md:col-span-2 bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center">
+          <button type="submit" class="md:col-span-2 bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center w-full">
             <i data-lucide="save"></i> Salvar Produto
           </button>
         </form>
@@ -172,15 +198,15 @@
             <i data-lucide="list" class="text-accent"></i>
             Estoque Atual
           </h2>
-          <div class="flex gap-2">
-            <input id="filtro-lista" type="text" placeholder="Buscar produto, categoria ou fornecedor..." class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent text-gray-800 bg-gray-100 w-64" />
-            <button onclick="renderTabela()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1">
+          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <input id="filtro-lista" type="text" placeholder="Buscar produto, categoria ou fornecedor..." class="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent text-gray-800 bg-gray-100 w-full sm:w-64" />
+            <button onclick="renderTabela()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1 w-full sm:w-auto">
               <i data-lucide="refresh-ccw"></i> Atualizar
             </button>
           </div>
         </div>
         <div class="overflow-x-auto rounded-lg shadow-inner">
-          <table class="w-full text-left border-collapse min-w-[600px] md:min-w-[900px]">
+          <table class="w-full text-left border-collapse min-w-[320px] sm:min-w-[600px] md:min-w-[900px] text-xs sm:text-sm">
             <thead>
               <tr class="bg-gray-200 text-gray-700">
                 <th class="p-3 font-semibold">#</th>
@@ -209,21 +235,21 @@
           Saída de Produto
         </h2>
         <form id="form-saida" class="flex flex-col md:flex-row gap-4 items-end">
-          <div class="flex flex-col flex-1">
+          <div class="flex flex-col flex-1 min-w-0">
             <label for="saida-produto" class="text-sm font-semibold text-gray-700 mb-1">Produto</label>
             <select id="saida-produto" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400">
               <!-- Opções via JS -->
             </select>
           </div>
-          <div class="flex flex-col w-32">
+          <div class="flex flex-col w-full md:w-32">
             <label for="saida-quantidade" class="text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
             <input type="number" id="saida-quantidade" min="1" value="1" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" />
           </div>
-          <div class="flex flex-col w-48">
+          <div class="flex flex-col w-full md:w-48">
             <label for="saida-data" class="text-sm font-semibold text-gray-700 mb-1">Data da Saída</label>
             <input type="date" id="saida-data" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-400" value="" />
           </div>
-          <button type="submit" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition font-semibold flex items-center gap-2">
+          <button type="submit" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition font-semibold flex items-center gap-2 w-full md:w-auto">
             <i data-lucide="minus-circle"></i> Registrar Saída
           </button>
         </form>
@@ -237,21 +263,21 @@
           Entrada de Produto
         </h2>
         <form id="form-entrada" class="flex flex-col md:flex-row gap-4 items-end">
-          <div class="flex flex-col flex-1">
+          <div class="flex flex-col flex-1 min-w-0">
             <label for="entrada-produto" class="text-sm font-semibold text-gray-700 mb-1">Produto</label>
             <select id="entrada-produto" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400">
               <!-- Opções via JS -->
             </select>
           </div>
-          <div class="flex flex-col w-32">
+          <div class="flex flex-col w-full md:w-32">
             <label for="entrada-quantidade" class="text-sm font-semibold text-gray-700 mb-1">Quantidade</label>
             <input type="number" id="entrada-quantidade" min="1" value="1" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400" />
           </div>
-          <div class="flex flex-col w-48">
+          <div class="flex flex-col w-full md:w-48">
             <label for="entrada-data" class="text-sm font-semibold text-gray-700 mb-1">Data da Entrada</label>
             <input type="date" id="entrada-data" class="p-3 rounded-lg border border-gray-300 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400" value="" />
           </div>
-          <button type="submit" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold flex items-center gap-2">
+          <button type="submit" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold flex items-center gap-2 w-full md:w-auto">
             <i data-lucide="plus-circle"></i> Registrar Entrada
           </button>
         </form>
@@ -265,11 +291,11 @@
             <i data-lucide="shuffle" class="text-blue-400"></i>
             Movimentações do Dia
           </h2>
-          <div class="flex gap-2">
-            <button onclick="gerarMovimentacoesPDF()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1">
+          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button onclick="gerarMovimentacoesPDF()" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-1 w-full sm:w-auto">
               <i data-lucide="file-text"></i> Gerar PDF do Dia
             </button>
-            <button id="btn-reset-movimentacoes" onclick="resetarMovimentacoes()" type="button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-1">
+            <button id="btn-reset-movimentacoes" onclick="resetarMovimentacoes()" type="button" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-1 w-full sm:w-auto">
               <i data-lucide="trash-2"></i> Resetar Movimentações
             </button>
           </div>
@@ -279,7 +305,7 @@
           <canvas id="graficoMovimentacoes" class="w-full min-w-[320px] h-48 md:h-64"></canvas>
         </div>
         <div class="overflow-x-auto rounded-lg shadow-inner">
-          <table class="w-full text-left border-collapse min-w-[400px] md:min-w-[600px]">
+          <table class="w-full text-left border-collapse min-w-[320px] sm:min-w-[400px] md:min-w-[600px] text-xs sm:text-sm">
             <thead>
               <tr class="bg-gray-200 text-gray-700">
                 <th class="p-3 font-semibold">Data</th>
@@ -343,7 +369,7 @@
               <input type="file" id="editar-foto" name="foto" accept="image/*" class="p-3 border border-gray-600 bg-gray-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent" />
               <div id="editar-preview-foto" class="mt-2"></div>
             </div>
-            <button type="submit" class="bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center">
+            <button type="submit" class="bg-accent text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition font-semibold text-lg flex items-center gap-2 justify-center w-full">
               <i data-lucide="save"></i> Salvar Alterações
             </button>
           </form>
@@ -355,7 +381,7 @@
       lucide.createIcons();
 
       // URL da API backend
-      const API_URL = "https://apilechef-production.up.railway.app/apI";
+      const API_URL = "https://apilechef-production.up.railway.app/api";
 
       // Autenticação: redireciona para login se não houver token
       (function() {
@@ -1248,6 +1274,58 @@
       // --- Gráfico de movimentações no dashboard ---
       async function renderDashboardMovimentacoes() {
         await gerarGraficoMovimentacoes('graficoMovimentacoesDashboard');
+      }
+
+      // Responsividade do menu lateral (hambúrguer) com overlay
+      function abrirSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.remove('-translate-x-full');
+        sidebar.classList.add('translate-x-0');
+        overlay.classList.remove('hidden');
+        overlay.classList.add('block');
+        document.getElementById('btn-hamburguer').style.display = 'none';
+        document.getElementById('btn-fechar-sidebar').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+      function fecharSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('translate-x-0');
+        overlay.classList.add('hidden');
+        overlay.classList.remove('block');
+        document.getElementById('btn-hamburguer').style.display = 'block';
+        document.getElementById('btn-fechar-sidebar').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      // Fecha sidebar ao clicar fora (mobile)
+      document.getElementById('sidebar-overlay').addEventListener('click', fecharSidebar);
+      // Fecha sidebar ao redimensionar para desktop
+      window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
+          document.getElementById('sidebar').classList.remove('-translate-x-full');
+          document.getElementById('sidebar').classList.add('translate-x-0');
+          document.getElementById('sidebar-overlay').classList.add('hidden');
+          document.getElementById('sidebar-overlay').classList.remove('block');
+          document.getElementById('btn-hamburguer').style.display = 'none';
+          document.getElementById('btn-fechar-sidebar').style.display = 'none';
+          document.body.style.overflow = '';
+        } else {
+          fecharSidebar();
+        }
+      });
+      // Inicialização: sidebar fechado em mobile
+      window.addEventListener('DOMContentLoaded', function() {
+        if (window.innerWidth < 768) {
+          fecharSidebar();
+        } else {
+          document.getElementById('btn-hamburguer').style.display = 'none';
+        }
+      });
+      // Fecha sidebar ao clicar em qualquer item do menu no mobile
+      function fecharSidebarMobile() {
+        if (window.innerWidth < 768) fecharSidebar();
       }
 
       // Atualiza tudo ao recarregar a página (F5 ou reload)
