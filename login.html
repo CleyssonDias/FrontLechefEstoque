@@ -22,15 +22,57 @@
     };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    @media (max-width: 480px) {
+      body {
+        padding: 0 !important;
+      }
+      .login-card {
+        padding: 1.5rem !important;
+        border-radius: 1rem !important;
+        max-width: 98vw !important;
+        min-width: 0 !important;
+      }
+      .login-logo {
+        width: 48px !important;
+        height: 48px !important;
+        margin-bottom: 0.5rem !important;
+      }
+      .login-title {
+        font-size: 1.5rem !important;
+      }
+      .login-form input, .login-form button {
+        font-size: 1rem !important;
+        padding: 0.75rem !important;
+      }
+      .login-form label {
+        font-size: 0.95rem !important;
+      }
+      .login-form {
+        gap: 1.25rem !important;
+      }
+      .login-footer {
+        margin-top: 2rem !important;
+      }
+    }
+    @media (max-width: 350px) {
+      .login-title {
+        font-size: 1.1rem !important;
+      }
+      .login-card {
+        padding: 0.5rem !important;
+      }
+    }
+  </style>
 </head>
 <body class="bg-primary min-h-screen flex items-center justify-center font-sans">
-  <div class="w-full max-w-md mx-auto bg-secondary rounded-2xl shadow-2xl p-8 flex flex-col items-center">
+  <div class="login-card w-full max-w-md mx-auto bg-secondary rounded-2xl shadow-2xl p-8 flex flex-col items-center">
     <div class="flex flex-col items-center mb-8">
-      <img src="https://img.icons8.com/ios-filled/80/ffffff/chef-hat.png" alt="Le Chef Logo" class="h-16 w-16 mb-2"/>
-      <h1 class="text-3xl font-extrabold text-accent mb-1">Le Chef</h1>
-      <p class="text-gray-300 text-base">Controle de Estoque</p>
+      <img src="https://img.icons8.com/ios-filled/80/ffffff/chef-hat.png" alt="Le Chef Logo" class="login-logo h-16 w-16 mb-2"/>
+      <h1 class="login-title text-3xl font-extrabold text-accent mb-1">Le Chef</h1>
+      <p class="text-gray-300 text-base text-center">Controle de Estoque</p>
     </div>
-    <form id="login-form" class="w-full flex flex-col gap-6">
+    <form id="login-form" class="login-form w-full flex flex-col gap-6">
       <div>
         <label for="usuario" class="block text-gray-300 font-semibold mb-2">Usuário</label>
         <input type="text" id="usuario" name="usuario" autocomplete="username" required
@@ -51,61 +93,102 @@
       <div id="login-erro" class="text-red-400 text-center text-sm mt-2 hidden">Usuário ou senha inválidos.</div>
     </form>
     <div id="admin-panel" class="w-full mt-8 hidden">
-      <div class="mb-4 text-accent font-bold text-lg flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Criar novo usuário
+      <div class="mb-8 flex flex-col items-center">
+        <img src="https://img.icons8.com/ios-filled/80/ffffff/chef-hat.png" alt="Le Chef Logo" class="h-14 w-14 mb-2 drop-shadow-lg" />
+        <h2 class="text-3xl font-extrabold text-accent mb-1 tracking-tight drop-shadow">Cadastro de Usuários</h2>
+        <p class="text-gray-300 text-base text-center">Adicione e gerencie os usuários do sistema</p>
       </div>
-      <form id="criar-usuario-form" class="flex flex-col gap-4 bg-gray-800 p-4 rounded-xl">
+      <form id="criar-usuario-form" class="login-form w-full flex flex-col gap-6 bg-secondary/90 rounded-2xl shadow-xl p-8 max-w-md mx-auto border border-accent/30">
         <div>
-          <label for="novo-usuario" class="block text-gray-300 font-semibold mb-1">Usuário (e-mail)</label>
+          <label for="novo-usuario" class="block text-gray-300 font-semibold mb-2">Usuário (e-mail)</label>
           <input type="email" id="novo-usuario" name="novo-usuario" required
-            class="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder-gray-400"/>
+            class="w-full p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder-gray-400"/>
         </div>
         <div>
-          <label for="nova-senha" class="block text-gray-300 font-semibold mb-1">Senha</label>
+          <label for="nova-senha" class="block text-gray-300 font-semibold mb-2">Senha</label>
           <input type="password" id="nova-senha" name="nova-senha" required
-            class="w-full p-3 rounded-lg bg-gray-900 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder-gray-400"/>
+            class="w-full p-4 rounded-lg bg-gray-800 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent text-white placeholder-gray-400"/>
         </div>
-        <button type="submit" class="bg-accent text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition">Criar Usuário</button>
-        <div id="criar-usuario-msg" class="text-green-400 text-sm mt-2 hidden">Usuário criado com sucesso!</div>
-        <div id="criar-usuario-erro" class="text-red-400 text-sm mt-2 hidden">Usuário já existe.</div>
+        <button type="submit"
+          class="w-full bg-accent text-white font-bold py-3 rounded-lg mt-2 hover:bg-orange-600 transition text-lg shadow flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Cadastrar Usuário
+        </button>
+        <div id="criar-usuario-msg" class="text-green-400 text-center text-base mt-2 hidden">Usuário criado com sucesso!</div>
+        <div id="criar-usuario-erro" class="text-red-400 text-center text-base mt-2 hidden">Usuário já existe.</div>
       </form>
-      <div class="mt-4 text-xs text-gray-400">
-        <b>Usuários cadastrados:</b>
-        <ul id="lista-usuarios" class="mt-1"></ul>
+      <div class="mt-8 text-sm text-gray-300 max-w-md mx-auto w-full">
+        <div class="flex items-center gap-2 mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 01-8 0M12 14v7m-4-4h8"/>
+          </svg>
+          <b class="text-accent">Usuários cadastrados</b>
+        </div>
+        <ul id="lista-usuarios" class="mt-2 divide-y divide-accent/20 rounded-xl overflow-hidden bg-gray-900/60 shadow-inner">
+          <!-- Usuários via JS -->
+        </ul>
       </div>
     </div>
-    <div class="mt-8 text-gray-400 text-xs text-center">
-      ©️ 2024 Le Chef
+    <div class="login-footer mt-8 text-gray-400 text-xs text-center">
+      © 2024 Le Chef
     </div>
   </div>
   <script>
     // URL da API backend
-    const API_URL = "https://apilechef-production.up.railway.app/app";
+    const API_URL = "http://localhost:3001/api";
 
-    // Usuários locais (apenas admin)
-    function getUsuarios() {
-      let usuarios = JSON.parse(localStorage.getItem('usuarios_lechef') || "[]");
-      // Garante que o admin sempre existe
-      if (!usuarios.some(u => u.usuario === "admin@admin")) {
-        usuarios.unshift({ usuario: "admin@admin", senha: "@dmin1927", admin: true });
-        localStorage.setItem('usuarios_lechef', JSON.stringify(usuarios));
-      }
-      return usuarios;
+    // Exibe painel admin e lista usuários cadastrados
+    async function mostrarPainelAdmin() {
+      document.querySelector('.login-card > form').classList.add('hidden');
+      document.getElementById('login-erro').classList.add('hidden');
+      document.getElementById('admin-panel').classList.remove('hidden');
+      await renderUsuariosAPI();
     }
-    function setUsuarios(usuarios) {
-      localStorage.setItem('usuarios_lechef', JSON.stringify(usuarios));
-    }
-    function renderUsuarios() {
-      const usuarios = getUsuarios();
+
+    // Renderiza lista de usuários cadastrados (exceto admin)
+    async function renderUsuariosAPI() {
       const ul = document.getElementById('lista-usuarios');
       ul.innerHTML = '';
-      usuarios.forEach(u => {
-        ul.innerHTML += `<li class="text-gray-300">${u.usuario}${u.admin ? ' <span class="text-accent font-bold">(admin)</span>' : ''}</li>`;
-      });
+      try {
+        const res = await fetch(`${API_URL}/usuarios`);
+        if (!res.ok) {
+          ul.innerHTML = '<li class="text-red-400">Erro ao buscar usuários</li>';
+          return;
+        }
+        const usuarios = await res.json();
+        if (!usuarios.length) {
+          ul.innerHTML = '<li class="text-gray-400">Nenhum usuário cadastrado.</li>';
+          return;
+        }
+        usuarios.forEach(u => {
+          if (u.email === "admin@admin") return;
+          ul.innerHTML += `<li class="flex items-center justify-between text-gray-300 py-1">
+            <span>${u.email}</span>
+            <button onclick="apagarUsuario(${u.id})" class="ml-2 text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded transition border border-red-400 hover:bg-red-100/20">Apagar</button>
+          </li>`;
+        });
+      } catch {
+        ul.innerHTML = '<li class="text-red-400">Erro ao buscar usuários</li>';
+      }
     }
+
+    // Função para apagar usuário
+    async function apagarUsuario(id) {
+      if (!confirm('Tem certeza que deseja apagar este usuário?')) return;
+      try {
+        const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          await renderUsuariosAPI();
+        } else {
+          alert('Erro ao apagar usuário.');
+        }
+      } catch {
+        alert('Erro ao apagar usuário.');
+      }
+    }
+    window.apagarUsuario = apagarUsuario;
 
     // Login
     document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -113,62 +196,84 @@
       const usuario = document.getElementById('usuario').value.trim();
       const senha = document.getElementById('senha').value.trim();
       const erro = document.getElementById('login-erro');
-      const usuarios = getUsuarios();
-      const user = usuarios.find(u => u.usuario === usuario && u.senha === senha);
-      if (user) {
+      // Se admin@admin e senha @dmin, entra no modo admin local
+      if (usuario === "admin@admin" && senha === "@dmin") {
         erro.classList.add('hidden');
         // Gera token simples e salva no localStorage
         const token = btoa(`${usuario}:${Date.now()}:${Math.random()}`);
         localStorage.setItem('lechef_token', token);
         localStorage.setItem('lechef_usuario', usuario);
-        if (user.admin) {
-          document.getElementById('admin-panel').classList.remove('hidden');
-          renderUsuarios();
-        } else {
+        mostrarPainelAdmin();
+        return;
+      }
+      // Demais usuários: autentica via API
+      try {
+        const res = await fetch(`${API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: usuario, senha })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem('lechef_token', data.token);
+          localStorage.setItem('lechef_usuario', usuario);
           window.location.href = "index.html";
-        }
-      } else {
-        // Tenta autenticar via API
-        try {
-          const res = await fetch(`${API_URL}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: usuario, senha })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            localStorage.setItem('lechef_token', data.token);
-            localStorage.setItem('lechef_usuario', usuario);
-            window.location.href = "index.html";
-          } else {
-            erro.classList.remove('hidden');
-          }
-        } catch {
+        } else {
           erro.classList.remove('hidden');
         }
+      } catch {
+        erro.classList.remove('hidden');
       }
     });
 
-    // Criar novo usuário (apenas admin, local)
-    document.getElementById('criar-usuario-form').addEventListener('submit', function(e) {
+    // Criar novo usuário (sempre via API, mas mantém admin local)
+    document.getElementById('criar-usuario-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const novoUsuario = document.getElementById('novo-usuario').value.trim();
       const novaSenha = document.getElementById('nova-senha').value.trim();
       const msg = document.getElementById('criar-usuario-msg');
       const erro = document.getElementById('criar-usuario-erro');
-      let usuarios = getUsuarios();
-      if (usuarios.some(u => u.usuario === novoUsuario)) {
-        msg.classList.add('hidden');
-        erro.classList.remove('hidden');
+
+      // Permite criar o admin localmente, o resto vai para a API
+      if (novoUsuario === "admin@admin") {
+        // Salva admin localmente se não existir
+        let usuarios = JSON.parse(localStorage.getItem('usuarios_lechef') || "[]");
+        if (!usuarios.some(u => u.usuario === "admin@admin")) {
+          usuarios.unshift({ usuario: "admin@admin", senha: novaSenha, admin: true });
+          localStorage.setItem('usuarios_lechef', JSON.stringify(usuarios));
+          msg.classList.remove('hidden');
+          erro.classList.add('hidden');
+          document.getElementById('criar-usuario-form').reset();
+        } else {
+          msg.classList.add('hidden');
+          erro.classList.remove('hidden');
+        }
         return;
       }
-      usuarios.push({ usuario: novoUsuario, senha: novaSenha, admin: false });
-      setUsuarios(usuarios);
-      msg.classList.remove('hidden');
-      erro.classList.add('hidden');
-      renderUsuarios();
-      document.getElementById('criar-usuario-form').reset();
+
+      // Demais usuários: cadastro via API
+      try {
+        const res = await fetch(`${API_URL}/usuarios`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: novoUsuario, senha: novaSenha })
+        });
+        if (res.ok) {
+          msg.classList.remove('hidden');
+          erro.classList.add('hidden');
+          document.getElementById('criar-usuario-form').reset();
+          await renderUsuariosAPI();
+        } else {
+          msg.classList.add('hidden');
+          erro.classList.remove('hidden');
+        }
+      } catch {
+        msg.classList.add('hidden');
+        erro.classList.remove('hidden');
+      }
     });
+
+    // Opcional: Remover ou adaptar renderUsuarios/lista-usuarios se não houver endpoint para listar usuários
   </script>
 </body>
 </html>
